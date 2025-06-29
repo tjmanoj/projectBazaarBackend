@@ -54,8 +54,8 @@ app.get('/download/:projectId', verifyAuth, async (req, res) => {
     });
 
     // Set response headers for file download
-    res.setHeader('Content-Type', file.data.mimeType);
-    res.setHeader('Content-Disposition', `attachment; filename="${file.data.name}"`);
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', 'attachment; filename="source-code-from-ProjectBazaar.zip"');
 
     // Stream the file from Google Drive to the response
     const stream = await drive.files.get({
