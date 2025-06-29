@@ -3,6 +3,7 @@ const cors = require('cors');
 const { verifyAuth } = require('./middleware/auth');
 const { db } = require('./config/firebase');
 const { drive } = require('./config/googleDrive');
+require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -35,15 +36,20 @@ app.get('/download/:projectId', verifyAuth, async (req, res) => {
       return res.status(403).json({ error: 'Project not purchased' });
     }
 
-    // Get Google Drive file ID
-    const fileId = project.driveFileId;
+    // Get Google Drive file ID from sourceCodeUrl field
+    const fileId = project.sourceCodeUrl;
     if (!fileId) {
       return res.status(404).json({ error: 'Source file not found' });
     }
+    
+    // Clean up the file ID if it's a full URL
+    const cleanFileId = fileId.includes('drive.google.com/file/d/') 
+      ? fileId.split('/file/d/')[1].split('/')[0]
+      : fileId;
 
     // Get file metadata from Google Drive
     const file = await drive.files.get({
-      fileId,
+      fileId: cleanFileId,
       fields: 'name, mimeType'
     });
 
@@ -53,7 +59,7 @@ app.get('/download/:projectId', verifyAuth, async (req, res) => {
 
     // Stream the file from Google Drive to the response
     const stream = await drive.files.get({
-      fileId,
+      fileId: cleanFileId,
       alt: 'media'
     }, { responseType: 'stream' });
 
